@@ -1,3 +1,6 @@
+import java.util.*;
+import java.awt.*;
+
 class Infusion extends Thread {
 	Calendar c1 = Calendar.getInstance();
 	Calendar c2;
@@ -76,8 +79,8 @@ class Infusion extends Thread {
 	}
 
 	public String getTimeAsString(Calendar cal) {
-		return getDigitsAsString(cal.get(Calendar.HOUR_OF_DAY)) + ":" 
-                     + getDigitsAsString(cal.get(Calendar.MINUTE)) + ":" 
+		return getDigitsAsString(cal.get(Calendar.HOUR_OF_DAY)) + ":"
+                     + getDigitsAsString(cal.get(Calendar.MINUTE)) + ":"
                      + getDigitsAsString(cal.get(Calendar.SECOND));
 	}
 

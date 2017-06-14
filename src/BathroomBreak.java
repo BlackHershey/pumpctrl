@@ -1,3 +1,5 @@
+import javax.swing.*;
+
 class BathroomBreak extends Thread {
 	Integer change_time1 = new Integer(0);
 	Integer change_time2 = new Integer(0);

@@ -1,3 +1,6 @@
+import javax.swing.*;
+import java.awt.*;
+
 class ClockView extends JPanel implements Runnable {
 	private JLabel tLabel = new JLabel();
 	static Font bigFont = new Font("arial", Font.BOLD, 18);

@@ -1,3 +1,7 @@
+import javax.swing.*;
+import java.util.*;
+import java.awt.*;
+
 class StopWatch extends JPanel implements Runnable {
 	Integer sec_elapsed = new Integer(0);
 	Calendar time1;
