@@ -1,4 +1,4 @@
-SET JDK_PATH="C:\Program Files (x86)\Java\jdk1.8.0_131"
+SET JDK_PATH="C:\Program Files (x86)\Java\jdk1.8.0_141"
 SET JDK_BIN=%JDK_PATH%"\bin"
 SET JAVAC_EXE=%JDK_BIN%"\javac.exe"
 set JAR_EXE=%JDK_BIN%"\jar.exe"

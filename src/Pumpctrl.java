@@ -25,7 +25,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 	static JLabel infuse_start = new JLabel("      Infusion Start Time:  00:00:00");
 	static JPanel pump_status_panel = new JPanel();
 	static JLabel pump_status_label = new JLabel();
-	static JLabel pump_program_version_label = new JLabel("program version 1.1.4, Apr 15, 2013");
+	static JLabel pump_program_version_label = new JLabel("program version 1.1.5, July 25, 2017");
 	static JPanel left_panel = new JPanel();
 	static JPanel subject_info = new JPanel();
 	static JLabel subject_title = new JLabel("Subject Info");
@@ -53,7 +53,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 	static JButton add_time_button = new JButton("Add Time");
 	static JButton end_button = new JButton("End Infusion");
 
-	// infusion constatnts
+	// decreasing rate infusion constants and variables
 	static double load_decay_const = 50;
 	static double JM_load_constant = 2.7;
 	static double target_plasma = 1200.0;  // ng/ml
@@ -67,13 +67,24 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 	static Double[] rate;
 	static int change_stat = 0;
 
+	// loading + maintenance infusion constants and variables
+	static double LM_loading_target_ratio = 0.6426; // mg/kg
+	static double LM_maintenance_ratio = 2.882; // mg/kg/min
+	static Double loading_dose_rate = new Double(0);
+	static Double maintenance_rate = new Double(0);
+
+
+	// timing constants
 	static Double d_int = new Double(0);
+	static Double d_int_default = new Double(60.0);
 	static Double total_time = new Double(0);
+	static Double total_time_default = new Double(180.0);
 	static Double running_time = new Double(0);
 	static int rate_num = 0;
 	static int rate_indx = 0;
 
 	// setup info variables
+	static String infusion_method;
 	static String cnda_id;
 	static Integer visit_day = new Integer(0);
 	static Double age = new Double(0);
@@ -168,12 +179,6 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		subject_info.add(subject_title);
 		subject_table.getColumnModel().getColumn(0).setPreferredWidth(120);
 		subject_table.getColumnModel().getColumn(1).setPreferredWidth(90);
-		subject_table.setValueAt("Age:",0,0);
-		subject_table.setValueAt("Weight:",1,0);
-		subject_table.setValueAt("Target plasma conc.:",2,0);
-		subject_table.setValueAt("Target volume:",3,0);
-		subject_table.setValueAt("Infusion length:",4,0);
-		subject_table.setValueAt("Rate change interval:",5,0);
 		subject_table.doLayout();
 		subject_table.setEnabled(false);
 		subject_info.add(subject_table);
@@ -365,6 +370,40 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		Object a9 = new Object();
 		int a10 = 0;
 
+		// New quesiton for the simpler loading dose + maintenance infusion
+		JLabel q0 = new JLabel("Choose an infusion method: ");
+		String title0 = "Choose infusion method";
+		int a0 = 0;
+
+		// Create the radio buttons.
+    JRadioButton loadmaintButton = new JRadioButton("loading + maintenance");
+    loadmaintButton.setMnemonic(KeyEvent.VK_L);
+    loadmaintButton.setActionCommand("LM");
+    loadmaintButton.setSelected(false);
+
+    JRadioButton decreasingrateButton = new JRadioButton("decreasing rate");
+    decreasingrateButton.setMnemonic(KeyEvent.VK_D);
+    decreasingrateButton.setActionCommand("DR");
+		decreasingrateButton.setSelected(false);
+
+    // Group the radio buttons.
+    ButtonGroup infuse_method_button_group = new ButtonGroup();
+    infuse_method_button_group.add(loadmaintButton);
+    infuse_method_button_group.add(decreasingrateButton);
+
+		JPanel infusion_method_choices_panel = new JPanel();
+		infusion_method_choices_panel.add(q0);
+		infusion_method_choices_panel.add(loadmaintButton);
+		infusion_method_choices_panel.add(decreasingrateButton);
+
+		while( true ){
+			a0 = JOptionPane.showOptionDialog(main_frame,infusion_method_choices_panel,title0,JOptionPane.OK_CANCEL_OPTION,JOptionPane.QUESTION_MESSAGE,null,null,null);
+			try {
+				infusion_method = new String(infuse_method_button_group.getSelection().getActionCommand());
+			} catch (Exception e) {}
+			if ( infusion_method.length() > 1 ) break;
+		}
+
 		while( true ){
 			a1 = JOptionPane.showInputDialog(main_frame,q1,title1,JOptionPane.QUESTION_MESSAGE);
 			try {
@@ -386,7 +425,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 			try {
 				age = age.valueOf(a3);
 			} catch (Exception e) {}
-			if ( age > 17 && age < 57 ) break;
+			if ( age > 17 && age < 100 ) break;
 		}
 
 		while( true ){
@@ -394,11 +433,21 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 			try {
 				weight = weight.valueOf(a4);
 			} catch (Exception e) {}
-			if ( weight > 80 && weight < 350 ) break;
+			if ( weight > 80 && weight < 300 ) break;
+		}
+
+		if ( infusion_method.equals("LM") ){
+			System.out.println("infusion method = " + infusion_method);
+			q6 = new JLabel("Enter the loading dose length (min): ");
+			q7 = new JLabel("Enter the total infusion length (min): ");
+			title6 = "Enter loading dose length";
+			title7 = "Enter total infusion length";
+			d_int_default = 10.0;
+			total_time_default = 130.0;
 		}
 
 		while( true ){
-			a6 = JOptionPane.showInputDialog(main_frame,q6,title6,JOptionPane.QUESTION_MESSAGE,null,null,60);
+			a6 = JOptionPane.showInputDialog(main_frame,q6,title6,JOptionPane.QUESTION_MESSAGE,null,null,d_int_default);
 			try {
 				d_int = Double.parseDouble(a6.toString());
 			} catch (Exception e) {}
@@ -406,7 +455,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		}
 
 		while( true ){
-			a7 = JOptionPane.showInputDialog(main_frame,q7,title7,JOptionPane.QUESTION_MESSAGE,null,null,180);
+			a7 = JOptionPane.showInputDialog(main_frame,q7,title7,JOptionPane.QUESTION_MESSAGE,null,null,total_time_default);
 			try {
 				total_time = Double.parseDouble(a7.toString());
 			} catch (Exception e) {}
@@ -421,12 +470,14 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 			if ( dia > 0 && dia <= 240 ) break;
 		}
 
-		while( true ){
-			a9 = JOptionPane.showInputDialog(main_frame,q9,title9,JOptionPane.QUESTION_MESSAGE,null,null,1200.0);
-			try {
-				target_plasma = Double.parseDouble(a9.toString());
-			} catch (Exception e) {}
-			if ( target_plasma > 100 && target_plasma <= 1200 ) break;
+		if ( infusion_method.equals("DR") ){
+			while( true ){
+				a9 = JOptionPane.showInputDialog(main_frame,q9,title9,JOptionPane.QUESTION_MESSAGE,null,null,1200.0);
+				try {
+					target_plasma = Double.parseDouble(a9.toString());
+				} catch (Exception e) {}
+				if ( target_plasma > 100 && target_plasma <= 1200 ) break;
+			}
 		}
 
 		chooser.setDialogTitle("Choose a log file");
@@ -442,28 +493,50 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		try {
 			log_stream = new PrintStream( log.getAbsolutePath() );
 		} catch (Exception e) {}
-		mass = weight/2.2;
-		subject_table.setValueAt(target_plasma + " ng/mL",2,1);
-		subject_table.setValueAt(total_time + " min",4,1);
-		subject_table.setValueAt(d_int + " sec",5,1);
-		total_time = total_time*60;
-		rate_num = new Double((total_time / d_int )).intValue();
-		rate = new Double[rate_num];
-		vod = 1052 + 0.8172*(age - 21.5);
-		clearance = 5.693 + (21.5 - age)*0.04813;
-		r_part1 = (target_plasma*mass)/pharmacy;
-		r_part2 = (60*JM_load_constant*vod*load_decay_const)/(1200*1078*70*d_int);
-		r_check2 = 0.000001*clearance;
-		set_rates();
-		infuse_progress.setMinimum(0);
-		infuse_progress.setMaximum(total_time.intValue());
+		mass = weight/2.205;
+
+		subject_table.setValueAt("Age:",0,0);
+		subject_table.setValueAt("Weight:",1,0);
 		subject_table.setValueAt(age.toString() + " yrs",0,1);
 		subject_table.setValueAt(weight.toString() + " lbs",1,1);
-		double vol_display = vol_delivered(total_time.intValue());
-		vol_display = vol_display*100;
-		long vol_display2 = round(vol_display);
-		vol_display = (new Double(vol_display2))/100;
-		subject_table.setValueAt(vol_display + " mL",3,1);
+		total_time = total_time*60;
+		infuse_progress.setMinimum(0);
+		infuse_progress.setMaximum(total_time.intValue());
+		if ( infusion_method.equals("DR") ){
+			subject_table.setValueAt("Target plasma conc.:",2,0);
+			subject_table.setValueAt("Target volume:",3,0);
+			subject_table.setValueAt("Infusion length:",4,0);
+			subject_table.setValueAt("Rate change interval:",5,0);
+			subject_table.setValueAt(target_plasma + " ng/mL",2,1);
+			subject_table.setValueAt(total_time + " min",4,1);
+			subject_table.setValueAt(d_int + " sec",5,1);
+			rate_num = new Double((total_time / d_int )).intValue();
+			rate = new Double[rate_num];
+			vod = 1052 + 0.8172*(age - 21.5);
+			clearance = 5.693 + (21.5 - age)*0.04813;
+			r_part1 = (target_plasma*mass)/pharmacy;
+			r_part2 = (60*JM_load_constant*vod*load_decay_const)/(1200*1078*70*d_int);
+			r_check2 = 0.000001*clearance;
+			set_rates();
+			double vol_display = vol_delivered(total_time.intValue());
+			vol_display = vol_display*100;
+			long vol_display2 = round(vol_display);
+			vol_display = (new Double(vol_display2))/100;
+			subject_table.setValueAt(vol_display + " mL",3,1);
+		} else {
+			subject_table.setValueAt("Loading dose rate:",2,0);
+			subject_table.setValueAt("Maintenance infusion rate:",3,0);
+			subject_table.setValueAt("Loading dose length:",4,0);
+			subject_table.setValueAt("Infusion length:",5,0);
+			subject_table.setValueAt(total_time + " min",5,1);
+			// calculate rates
+			loading_dose_rate = ((LM_loading_target_ratio * mass)/d_int)/pharmacy;
+			maintenance_rate = ((LM_maintenance_ratio*0.00001)*(140-age))/pharmacy;
+
+			subject_table.setValueAt(loading_dose_rate + " mL/min",2,1);
+			subject_table.setValueAt(maintenance_rate + " mL/min",3,1);
+			subject_table.setValueAt(d_int + " min",4,1);
+		}
 
 		pump_write("dia " + dia.toString() + "\r",true);
 		pump_write("dia\r",true);
