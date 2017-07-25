@@ -139,7 +139,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 	public void setup_main_window(){
 
 		// setup main window
-		main_frame.setSize(780,450);
+		main_frame.setSize(1000,800);
 		main_frame.setResizable(false);
 		main_frame.getContentPane().setLayout( new FlowLayout(FlowLayout.CENTER,10,10) );
 		main_frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -206,19 +206,6 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		pump_info.add(infuse_progress);
 		pump_info.setPreferredSize(new Dimension(470,190));
 		main_frame.add(pump_info);
-
-		// setup pump control panel
-		/* no prime button for now
-		ActionListener a = new ActionListener(){
-			public void actionPerformed(ActionEvent e){
-				// prime();
-			}
-		};
-		prime_button.addActionListener(a);
-		prime_button.setToolTipText("Press to prime the line");
-		ctrl_panel.add(prime_button);
-		prime_button.setEnabled(false);
-		*/
 
 		ActionListener b = new ActionListener(){
 			public void actionPerformed(ActionEvent e){
@@ -323,16 +310,8 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		ctrl_panel.setBorder(etched_border);
 		main_frame.add(ctrl_panel);
 
-		/* setup instructions panel
-		try {
-			info = new JEditorPane("url:http://www.nil.wustl.edu/labs/kevin/man/kjb_faq.html");
-		} catch (Exception e) { System.out.println("Error: " + e); }
-		info.setEditable(false);
-		JScrollPane info_scroll = new JScrollPane(info);
-		info_scroll.setPreferredSize(new Dimension(700,153)); */
-
 		io_scroll = new JScrollPane(serial_io);
-		io_scroll.setPreferredSize(new Dimension(750,153));
+		io_scroll.setPreferredSize(new Dimension(750,400));
 		io_scroll.setWheelScrollingEnabled(true);
 
 		main_frame.add(io_scroll);
@@ -528,14 +507,19 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 			subject_table.setValueAt("Maintenance infusion rate:",3,0);
 			subject_table.setValueAt("Loading dose length:",4,0);
 			subject_table.setValueAt("Infusion length:",5,0);
-			subject_table.setValueAt(total_time + " min",5,1);
+			subject_table.setValueAt(String.format("%.1f", total_time/60.0) + " min",5,1);
 			// calculate rates
 			loading_dose_rate = ((LM_loading_target_ratio * mass)/d_int)/pharmacy;
 			maintenance_rate = ((LM_maintenance_ratio*0.00001)*(140-age))/pharmacy;
 
-			subject_table.setValueAt(loading_dose_rate + " mL/min",2,1);
-			subject_table.setValueAt(maintenance_rate + " mL/min",3,1);
+			subject_table.setValueAt(String.format("%.4f", loading_dose_rate) + " mL/min",2,1);
+			subject_table.setValueAt(String.format("%.4f", maintenance_rate) + " mL/min",3,1);
 			subject_table.setValueAt(d_int + " min",4,1);
+
+			rate_num = 2;
+			rate = new Double[rate_num];
+			rate[0] = loading_dose_rate;
+			rate[1] = maintenance_rate;
 		}
 
 		pump_write("dia " + dia.toString() + "\r",true);
@@ -652,14 +636,24 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 
 	public static double vol_delivered( int sec ) {
 		double ans = 0;
+		double input_min = 0;
 		int i = 0;
 		int j = 0;
 		int step = d_int.intValue();
-		for ( i = 0; i < sec; i++ ) {
-			ans += (rate[j])/60;
-			if ( i == step ) {
-				step += d_int.intValue();
-				j++;
+		if ( infusion_method.equals("DR") ){
+			for ( i = 0; i < sec; i++ ) {
+				ans += (rate[j])/60;
+				if ( i == step ) {
+					step += d_int.intValue();
+					j++;
+				}
+			}
+		} else {
+			input_min = sec*60.0;
+			if ( input_min <= d_int ){
+				ans = rate[0] * input_min;
+			} else {
+				ans = (rate[0] * d_int) + (rate[1] * (input_min - d_int));
 			}
 		}
 		return ans;

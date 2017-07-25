@@ -25,20 +25,32 @@ class Infusion extends Thread {
 		Pumpctrl.log_stream.println("Age: " + Pumpctrl.age.toString());
 		Pumpctrl.log_stream.println("Weight: " + Pumpctrl.weight.toString());
 		Pumpctrl.log_stream.println("Syringe diameter: " + Pumpctrl.dia.toString());
-		Pumpctrl.log_stream.println("Rate change interval (sec): " + Pumpctrl.d_int.toString());
+		if ( Pumpctrl.infusion_method.equals("DR") ){
+			Pumpctrl.log_stream.println("Rate change interval (sec): " + Pumpctrl.d_int.toString());
+		} else {
+			Pumpctrl.log_stream.println("Loading dose length (min): " + Pumpctrl.d_int.toString());
+		}
 		Pumpctrl.log_stream.println("Total infusion time (min): " + (Pumpctrl.total_time/60));
 		Pumpctrl.log_stream.println("");
 		Pumpctrl.log_stream.print("Target volume to be infused (if infusion runs for " + (Pumpctrl.total_time/60) + " min) = ");
 		Pumpctrl.log_stream.println(Pumpctrl.vol_delivered(Pumpctrl.total_time.intValue()));
 		c1 = start_time;
-		c1.add(Calendar.SECOND,Pumpctrl.d_int.intValue());
+		if ( Pumpctrl.infusion_method.equals("DR") ){
+			c1.add(Calendar.SECOND,Pumpctrl.d_int.intValue());
+		}	else {
+			c1.add(Calendar.MINUTE,Pumpctrl.d_int.intValue());
+		}
 		c1.add(Calendar.MILLISECOND,-1);
 		Pumpctrl.running_time = Pumpctrl.running_time + Pumpctrl.d_int;
 		Pumpctrl.rate_indx++;
 		Pumpctrl.infuse_go = true;
 		Pumpctrl.infuse_timer = true;
 		Pumpctrl.pump_status_panel.setBackground(Color.GREEN);
-		Pumpctrl.pump_status_label.setText("Pump status: infusing");
+		if ( Pumpctrl.infusion_method.equals("DR") ){
+			Pumpctrl.pump_status_label.setText("Pump status: infusing");
+		} else {
+			Pumpctrl.pump_status_label.setText("Pump status: infusing loading dose");
+		}
 		Pumpctrl.infuse_time_panel.reset();
 		while ( Pumpctrl.running_time <= Pumpctrl.total_time && Pumpctrl.infusion_running) {
 			if ( Pumpctrl.infuse_time_panel.time1.after(c1)) {
@@ -53,6 +65,9 @@ class Infusion extends Thread {
 						Pumpctrl.pump_write("rat\r",false);
 						try { Thread.sleep(100); } catch (Exception c) {}
 						if ( Pumpctrl.io_record.indexOf(Pumpctrl.rate[Pumpctrl.rate_indx].toString().substring(0,6) + " ml/mn") != -1 ) {
+							if ( Pumpctrl.infusion_method.equals("LM") ){
+								Pumpctrl.pump_status_label.setText("Pump status: maintenance infusion");
+							}
 							Pumpctrl.pump_write("del\r",true);
 							break;
 						}
@@ -61,10 +76,27 @@ class Infusion extends Thread {
 				Pumpctrl.infuse_progress.setValue(Pumpctrl.running_time.intValue());
 				Pumpctrl.running_time = Pumpctrl.running_time + Pumpctrl.d_int;
 				Pumpctrl.rate_indx++;
-				c1.add(Calendar.SECOND,Pumpctrl.d_int.intValue());
 				Pumpctrl.io_scroll.getVerticalScrollBar().setValue(100);
+				if ( Pumpctrl.infusion_method.equals("DR") ){
+					c1.add(Calendar.SECOND,Pumpctrl.d_int.intValue());
+				} else {
+					c1.add(Calendar.SECOND,Pumpctrl.total_time.intValue() - Pumpctrl.d_int.intValue()*60);
+					break;
+				}
 			}
 		}
+
+		// while loop for maintenance rate
+		if ( Pumpctrl.infusion_method.equals("LM") ){
+			while ( Pumpctrl.running_time <= Pumpctrl.total_time && Pumpctrl.infusion_running) {
+				try { Thread.sleep(100); } catch (Exception c) {}
+				if ( Pumpctrl.infuse_time_panel.time1.after(c1)) {
+					break;
+				}
+			}
+		}
+
+
 		if ( Pumpctrl.time_added ) {
 			// add some time, then end
 		} else {
