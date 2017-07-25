@@ -510,7 +510,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 			subject_table.setValueAt(String.format("%.1f", total_time/60.0) + " min",5,1);
 			// calculate rates
 			loading_dose_rate = ((LM_loading_target_ratio * mass)/d_int)/pharmacy;
-			maintenance_rate = ((LM_maintenance_ratio*0.00001)*(140-age))/pharmacy;
+			maintenance_rate = ((LM_maintenance_ratio*mass*0.00001)*(140-age))/pharmacy;
 
 			subject_table.setValueAt(String.format("%.4f", loading_dose_rate) + " mL/min",2,1);
 			subject_table.setValueAt(String.format("%.4f", maintenance_rate) + " mL/min",3,1);
