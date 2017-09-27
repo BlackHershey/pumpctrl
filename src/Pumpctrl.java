@@ -19,13 +19,13 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 	static InputStream inputStream;
 
 	// main window containers, buttons, labels, etc
-	static JFrame main_frame = new JFrame("Pump Control");
+	static JFrame main_frame = new JFrame("Pump Control version 1.1.6-20170927");
 	static ClockView clock_panel = new ClockView();
 	static StopWatch infuse_time_panel = new StopWatch();
 	static JLabel infuse_start = new JLabel("      Infusion Start Time:  00:00:00");
 	static JPanel pump_status_panel = new JPanel();
 	static JLabel pump_status_label = new JLabel();
-	static JLabel pump_program_version_label = new JLabel("program version 1.1.5, July 25, 2017");
+	static JLabel pump_program_version_label = new JLabel("program version 1.1.6");
 	static JPanel left_panel = new JPanel();
 	static JPanel subject_info = new JPanel();
 	static JLabel subject_title = new JLabel("Subject Info");
@@ -649,7 +649,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 				}
 			}
 		} else {
-			input_min = sec*60.0;
+			input_min = sec/60.0;
 			if ( input_min <= d_int ){
 				ans = rate[0] * input_min;
 			} else {

@@ -55,6 +55,7 @@ class ChangeSyringe extends Thread {
 			} catch (Exception e){}
 			// catch_up_Int = (Integer) resume_a;
 			// catch_up_time = Integer.parseInt(resume_a);
+			// catch_up_time hard-coded to 120 seconds for now
 			catch_up_time = 120;
 		}
 
