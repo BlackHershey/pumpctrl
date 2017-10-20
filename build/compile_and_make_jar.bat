@@ -1,3 +1,4 @@
+rem This is a Windows batch scrip for compiling and archiving into a .jar file
 SET JDK_PATH="C:\Program Files (x86)\Java\jdk1.8.0_141"
 SET JDK_BIN=%JDK_PATH%\bin
 SET JAVAC_EXE=%JDK_BIN%\javac.exe

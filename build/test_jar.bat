@@ -1,3 +1,5 @@
+rem This is a Windows batch scrip for opening the archived .jar file.
+rem Replace the JRE_PATH variable if your JRE is different.
 SET JRE_PATH="C:\Program Files (x86)\Java\jre1.8.0_141"
 SET JRE_BIN=%JRE_PATH%\bin
 SET JAVA_EXE=%JRE_BIN%\java.exe
