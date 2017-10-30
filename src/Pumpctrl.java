@@ -7,6 +7,7 @@ import java.util.*;
 import javax.comm.*;
 import static java.lang.Math.*;
 
+// Pumpctrl class holds the GUI and talks to the serial port
 public class Pumpctrl extends Thread implements SerialPortEventListener {
 
 	// COM port variables
@@ -52,6 +53,8 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 	static JButton connect_button = new JButton("Connect to pump");
 	static JButton add_time_button = new JButton("Add Time");
 	static JButton end_button = new JButton("End Infusion");
+	static int exit_button;
+	static int end_button_press;
 
 	// decreasing rate infusion constants and variables
 	static double load_decay_const = 50;
@@ -99,11 +102,10 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 	static boolean infuse_timer = false;
 	static boolean time_added = false;
 
-	static int exit_button;
-	static int end_button_press;
-
+	// font specification
 	static Font bigFont = new Font("arial", Font.BOLD, 18);
 
+	// function that handles incoming serial port data
 	public void serialEvent(SerialPortEvent event) {
 		switch(event.getEventType()) {
 			case SerialPortEvent.BI:
@@ -136,14 +138,16 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		}
 	}
 
+	// set up the main GUI window
 	public void setup_main_window(){
 
-		// setup main window
+		// set up main frame
 		main_frame.setSize(1000,800);
 		main_frame.setResizable(false);
 		main_frame.getContentPane().setLayout( new FlowLayout(FlowLayout.CENTER,10,10) );
 		main_frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
+		// listener and function to handle the window exit button
 		WindowListener l = new WindowAdapter(){
 			public void windowClosing(WindowEvent e){
 				if ( infuse_timer ) {
@@ -157,11 +161,11 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		};
 		main_frame.addWindowListener(l);
 
-		// setup border for panels
+		// set up border for panels
 		Border etched_border;
 		etched_border = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
 
-		// setup upper left panel
+		// set up upper left panel
 		left_panel.setPreferredSize(new Dimension(270,190));
 
 		// add clock to upper left panel
@@ -207,6 +211,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		pump_info.setPreferredSize(new Dimension(470,190));
 		main_frame.add(pump_info);
 
+		// listener to call setup function
 		ActionListener b = new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				setup();
@@ -216,6 +221,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		setup_button.setToolTipText("Press to do setup steps");
 		ctrl_panel.add(setup_button);
 
+		// listener for infusion "start" button
 		ActionListener c = new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				infusion_running = true;
@@ -249,6 +255,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		ctrl_panel.add(pause_button);
 		*/
 
+		// listener for "bathroom break" button
 		ActionListener f = new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				BathroomBreak bathroom_break = new BathroomBreak();
@@ -260,6 +267,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		bathroom_button.setToolTipText("Press to go on a bathroom break");
 		// ctrl_panel.add(bathroom_button);
 
+		// listener for "change syringe" button
 		ActionListener g = new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				ChangeSyringe change = new ChangeSyringe();
@@ -271,6 +279,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		change_button.setToolTipText("Press to change syringe");
 		ctrl_panel.add(change_button);
 
+		// listener for serial port "connect" button
 		ActionListener h = new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				establish_com();
@@ -281,6 +290,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		connect_button.setToolTipText("Press to connect to pump");
 		ctrl_panel.add(connect_button);
 
+		// listener for "add time" button
 		ActionListener i = new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				add_time();
@@ -291,6 +301,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		add_time_button.setToolTipText("Press to add time to the end of the infusion");
 		// ctrl_panel.add(add_time_button);
 
+		// listener for "end infusion" button
 		ActionListener j = new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				end_button_press = JOptionPane.showConfirmDialog(main_frame,"Are you sure you want to end the infusion early?","End early?",JOptionPane.OK_CANCEL_OPTION);
@@ -305,7 +316,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		end_button.setToolTipText("Press to end the infusion");
 		ctrl_panel.add(end_button);
 
-
+		// size and position for control panel and output scroll panel
 		ctrl_panel.setPreferredSize(new Dimension(750,41));
 		ctrl_panel.setBorder(etched_border);
 		main_frame.add(ctrl_panel);
@@ -313,16 +324,18 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		io_scroll = new JScrollPane(serial_io);
 		io_scroll.setPreferredSize(new Dimension(750,400));
 		io_scroll.setWheelScrollingEnabled(true);
-
 		main_frame.add(io_scroll);
 
 		// pump_program_version_label.setFont(new Font("Dialog", Font.BOLD, 8));
 		// main_frame.add(pump_program_version_label);
 
+		// open main frame
 		main_frame.setVisible(true);
 	}
 
+	// setup function (get subject info, infusion type, settings)
 	public static void setup(){
+		JLabel q0 = new JLabel("Choose an infusion method: ");
 		JLabel q1 = new JLabel("Enter subject ID: ");
 		JLabel q2 = new JLabel("Enter visit day: ");
 		JLabel q3 = new JLabel("Enter subject's age(yrs): ");
@@ -331,6 +344,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		JLabel q7 = new JLabel("Enter the total time of the scan(min): ");
 		JLabel q8 = new JLabel("Enter the diameter of the pump syringe(mm): ");
 		JLabel q9 = new JLabel("Enter the target plasma concentration (ng/mL): ");
+		String title0 = "Choose infusion method";
 		String title1 = "Enter subject ID";
 		String title2 = "Enter visit day";
 		String title3 = "Enter age";
@@ -339,6 +353,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		String title7 = "Enter total time";
 		String title8 = "Enter syringe diameter";
 		String title9 = "Enter target plasma conc.";
+		int a0 = 0;
 		String a1 = new String();
 		String a2 = new String();
 		String a3 = new String();
@@ -349,32 +364,24 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		Object a9 = new Object();
 		int a10 = 0;
 
-		// New quesiton for the simpler loading dose + maintenance infusion
-		JLabel q0 = new JLabel("Choose an infusion method: ");
-		String title0 = "Choose infusion method";
-		int a0 = 0;
-
-		// Create the radio buttons.
+		// infusion type radio buttons
     JRadioButton loadmaintButton = new JRadioButton("loading + maintenance");
     loadmaintButton.setMnemonic(KeyEvent.VK_L);
     loadmaintButton.setActionCommand("LM");
     loadmaintButton.setSelected(false);
-
     JRadioButton decreasingrateButton = new JRadioButton("decreasing rate");
     decreasingrateButton.setMnemonic(KeyEvent.VK_D);
     decreasingrateButton.setActionCommand("DR");
 		decreasingrateButton.setSelected(false);
-
-    // Group the radio buttons.
     ButtonGroup infuse_method_button_group = new ButtonGroup();
     infuse_method_button_group.add(loadmaintButton);
     infuse_method_button_group.add(decreasingrateButton);
-
 		JPanel infusion_method_choices_panel = new JPanel();
 		infusion_method_choices_panel.add(q0);
 		infusion_method_choices_panel.add(loadmaintButton);
 		infusion_method_choices_panel.add(decreasingrateButton);
 
+		// ask setup questions
 		while( true ){
 			a0 = JOptionPane.showOptionDialog(main_frame,infusion_method_choices_panel,title0,JOptionPane.OK_CANCEL_OPTION,JOptionPane.QUESTION_MESSAGE,null,null,null);
 			try {
@@ -474,6 +481,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		} catch (Exception e) {}
 		mass = weight/2.205;
 
+		// use answers to setup questions to set up infusion
 		subject_table.setValueAt("Age:",0,0);
 		subject_table.setValueAt("Weight:",1,0);
 		subject_table.setValueAt(age.toString() + " yrs",0,1);
@@ -522,12 +530,16 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 			rate[1] = maintenance_rate;
 		}
 
+		// set syringe diameter on pump
 		pump_write("dia " + dia.toString() + "\r",true);
 		pump_write("dia\r",true);
+
+		// enable "start" button
 		infuse_button.setEnabled(true);
 
 	}
 
+	// function to establesh serial port connection to Harvard 44 pump
 	public void establish_com(){
 		String[] button_choices = {"Retry", "Exit", "Debug"};
 
@@ -538,25 +550,25 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 			int connected = -1;
 			// iterate over port list
 			while (portList.hasMoreElements()) {
-           		portId = (CommPortIdentifier) portList.nextElement();
+				portId = (CommPortIdentifier) portList.nextElement();
 				// JOptionPane.showMessageDialog(main_frame, "looking for pump on portID = " + portId.getName(), "Establish Connection", JOptionPane.INFORMATION_MESSAGE);
-           		if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
+				if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
 					// JOptionPane.showMessageDialog(main_frame, portId.getName()+ " is a PORT_SERIAL", "Establish Connection", JOptionPane.INFORMATION_MESSAGE);
 					try {
-                   		serialPort = (SerialPort) portId.open("Pumpctrl", 2000);
-           			} catch (PortInUseException e) {System.out.print("problem with comm PortInUseException\n");}
+						serialPort = (SerialPort) portId.open("Pumpctrl", 2000);
+					} catch (PortInUseException e) {System.out.print("problem with comm PortInUseException\n");}
 
-           			try {
-           				outputStream = serialPort.getOutputStream();
+					try {
+						outputStream = serialPort.getOutputStream();
 						inputStream = serialPort.getInputStream();
-               		} catch (IOException e) {System.out.print("problem with comm IOException\n");}
+					} catch (IOException e) {System.out.print("problem with comm IOException\n");}
 					// JOptionPane.showMessageDialog(main_frame, "outputStream.toString() = " + outputStream.toString(), "Establish Connection", JOptionPane.INFORMATION_MESSAGE);
 					try {
-                    	serialPort.setSerialPortParams(2400,
-                    	SerialPort.DATABITS_8,
-                    	SerialPort.STOPBITS_2,
-                    	SerialPort.PARITY_NONE);
-               		} catch (UnsupportedCommOperationException e) {System.out.print("problem with comm UnsupportedCommOperationException\n");}
+						serialPort.setSerialPortParams(2400,
+						SerialPort.DATABITS_8,
+						SerialPort.STOPBITS_2,
+						SerialPort.PARITY_NONE);
+					} catch (UnsupportedCommOperationException e) {System.out.print("problem with comm UnsupportedCommOperationException\n");}
 					// JOptionPane.showMessageDialog(main_frame, "baud rate = " + serialPort.getBaudRate(), "Establish Connection", JOptionPane.INFORMATION_MESSAGE);
 					try {
 						serialPort.addEventListener(this);
@@ -575,15 +587,14 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 					try {
 						Thread.sleep(100);
 					} catch (Exception e) {}
-
 					// JOptionPane.showMessageDialog(main_frame, "io_record = " + io_record, "Establish Connection", JOptionPane.INFORMATION_MESSAGE);
 
 					if ( io_record.indexOf("PUMP") != -1 ) {
 						JOptionPane.showMessageDialog(main_frame,"Pump connection established on " + portId.getName(),"Got connection",JOptionPane.INFORMATION_MESSAGE);
 						break get_coms;
 					}
-            	}
-        	}
+        }
+      }
 
 			try {
 				connected = JOptionPane.showOptionDialog(main_frame,connect_q,"Error",JOptionPane.OK_CANCEL_OPTION,JOptionPane.ERROR_MESSAGE,null,button_choices,null);
@@ -596,6 +607,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		}
 	}
 
+	// function that send commands to the Harvard 44 pump
 	public static void pump_write(String cmd, boolean echo) {
 		int i = 0;
 
@@ -609,19 +621,19 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		} catch (Exception e) {}
 
 		char cmd_send[] = new char[cmd.length()];
-
 		cmd.getChars(0,cmd.length(),cmd_send,0);
 		try {
-            for (i = 0; i < cmd.length(); i++ ){
+			for (i = 0; i < cmd.length(); i++ ){
 				outputStream.write(cmd_send[i]);
 				try {
 					Thread.sleep(50);
 				} catch (InterruptedException e) {}
 			}
-        } catch (Exception e) {}
+		} catch (Exception e) {}
 		try { Thread.sleep(100); } catch (Exception e) {}
 	}
 
+	// function that enters infusion rates into the "rate" array
 	public static void set_rates() {
 		int i = 0;
 		for ( i = 0; i < rate_num; i++ ) {
@@ -634,6 +646,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		}
 	}
 
+	// fucntion that returns how much should have been delivered by the pump after a given time
 	public static double vol_delivered( int sec ) {
 		double ans = 0;
 		double input_min = 0;
@@ -659,15 +672,18 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 		return ans;
 	}
 
+	// function that runs when the program thread starts
 	public void run() {
 		setup_main_window();
 	}
 
+	// fucntion for adding time to the infusion (not yet done!)
 	public static void add_time() {
 		// add some time to the end of the infusion
 		time_added = true;
 	}
 
+	// main function
 	public static void main(String[] args) {
 		Pumpctrl pump = new Pumpctrl();
 		pump.start();

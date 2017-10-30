@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 
+// class used to run a thread for changing the syringe
 class ChangeSyringe extends Thread {
 	Integer change_time1 = new Integer(0);
 	Integer change_time2 = new Integer(0);
@@ -12,12 +13,14 @@ class ChangeSyringe extends Thread {
 	Object[] flush_options = {"FLUSH","SKIP FLUSH","Cancel"};
 	String flush_q1 = "When the new syringe is loaded, the stopcock is turned closed-to-subject,\n and you are ready to flush the line, click FLUSH\n\nOR, IF YOU WANT TO SKIP FLUSHING FOR INJECTING RACLOPRIDE, CLICK SKIP FLUSH";
 
+	// function that runs when thread starts
 	public void run() {
+		// stop pump
 		Pumpctrl.infuse_go = false;
 		Pumpctrl.pump_write("stp\r",true);
 		change_time1 = Pumpctrl.infuse_time_panel.sec_elapsed;
 		Pumpctrl.pump_write("del\r",true);
-		Pumpctrl.io_record.append("Volume delivered from first syringe = " + Pumpctrl.vol_delivered(change_time1) + " ml\n\n");
+		Pumpctrl.io_record.append("Volume that should have been delivered from first syringe = " + Pumpctrl.vol_delivered(change_time1) + " ml\n\n");
 		Pumpctrl.pump_status_panel.setBackground(Color.YELLOW);
 		Pumpctrl.pump_status_label.setText("Pump status: changing syringes, stopped");
 		Pumpctrl.change_stat++;
@@ -31,7 +34,6 @@ class ChangeSyringe extends Thread {
 			} catch (Exception e){}
 		}
 
-		// JOptionPane.showMessageDialog(Pumpctrl.main_frame,"flush_a = " + flush_a);
 		// flush line
 		if ( flush_a == JOptionPane.YES_OPTION ) {
 			flush_a = JOptionPane.CANCEL_OPTION;
@@ -59,8 +61,6 @@ class ChangeSyringe extends Thread {
 			catch_up_time = 120;
 		}
 
-		// JOptionPane.showMessageDialog(Pumpctrl.main_frame,"catch_up_time = " + catch_up_time);
-
 		// calculate new catch-up rate and start catch-up
 		change_time2 = Pumpctrl.infuse_time_panel.sec_elapsed;
 		catch_up_rate = (Pumpctrl.vol_delivered(change_time2.intValue() + catch_up_time) - Pumpctrl.vol_delivered(change_time1.intValue()))/(catch_up_time/60);
@@ -72,9 +72,7 @@ class ChangeSyringe extends Thread {
 		Pumpctrl.pump_status_label.setText("Pump status: infusing (catch-up rate)");
 		change_time2 = change_time2 + catch_up_time;
 		while ( ! change_time2.equals(change_time1) ) {
-			try {
-				this.sleep(100);
-			} catch (Exception e) {}
+			try { this.sleep(100); } catch (Exception e) {}
 			change_time1 = Pumpctrl.infuse_time_panel.sec_elapsed;
 		}
 		// rejoin normal rate

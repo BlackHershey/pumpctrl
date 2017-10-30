@@ -1,13 +1,16 @@
 import java.util.*;
 import java.awt.*;
 
+// class that runs as a thread for the infusion, handles timing
 class Infusion extends Thread {
+	// infusion timing variables
 	Calendar c1 = Calendar.getInstance();
 	Calendar c2;
 	Calendar start_time;
 	Calendar end_time;
 	Thread infuse_time = new Thread(Pumpctrl.infuse_time_panel);
 
+	// function that runs when the thread starts
 	public void run() {
 		Pumpctrl.log_stream.println(Pumpctrl.pump_program_version_label.getText());
 		Pumpctrl.pump_write("mod pmp\r",false);
@@ -96,7 +99,6 @@ class Infusion extends Thread {
 			}
 		}
 
-
 		if ( Pumpctrl.time_added ) {
 			// add some time, then end
 		} else {
@@ -104,18 +106,21 @@ class Infusion extends Thread {
 		}
 	}
 
+	// convert integer to 0-padded string
 	protected String getDigitsAsString(int i) {
 		String str = Integer.toString(i);
 		if (i<10) return "0"+str;
 		return str;
 	}
 
+	// convert calendar value to string
 	public String getTimeAsString(Calendar cal) {
 		return getDigitsAsString(cal.get(Calendar.HOUR_OF_DAY)) + ":"
-                     + getDigitsAsString(cal.get(Calendar.MINUTE)) + ":"
-                     + getDigitsAsString(cal.get(Calendar.SECOND));
+			+ getDigitsAsString(cal.get(Calendar.MINUTE)) + ":"
+			+ getDigitsAsString(cal.get(Calendar.SECOND));
 	}
 
+	// function to end infusion
 	public void end_infusion(boolean infusion_running) {
 		Pumpctrl.pump_write("stp\r",true);
 		Pumpctrl.infuse_time_panel.pauseWatch();
