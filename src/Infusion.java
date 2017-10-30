@@ -63,7 +63,7 @@ class Infusion extends Thread {
 					Pumpctrl.serial_io.append(Pumpctrl.infuse_time_panel.getTimeAsString());
 					Pumpctrl.log_stream.println(Pumpctrl.infuse_time_panel.getTimeAsString());
 					while ( c2.after(Calendar.getInstance()) ){
-						Pumpctrl.pump_write("rat " + Pumpctrl.rate[Pumpctrl.rate_indx].toString().substring(0,6) + " mm\r",false);
+						Pumpctrl.pump_write("rat " + Pumpctrl.rate[Pumpctrl.rate_indx].toString().substring(0,6) + " mm\r",true);
 						try { Thread.sleep(100); } catch (Exception c) {}
 						Pumpctrl.pump_write("rat\r",false);
 						try { Thread.sleep(100); } catch (Exception c) {}
