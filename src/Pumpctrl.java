@@ -20,7 +20,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 	static InputStream inputStream;
 
 	// main window containers, buttons, labels, etc
-	static JFrame main_frame = new JFrame("Pump Control version 1.1.6-20170927");
+	static JFrame main_frame = new JFrame("Pump Control version 1.1.7-20171030");
 	static ClockView clock_panel = new ClockView();
 	static StopWatch infuse_time_panel = new StopWatch();
 	static JLabel infuse_start = new JLabel("      Infusion Start Time:  00:00:00");
