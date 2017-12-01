@@ -26,7 +26,7 @@ public class Pumpctrl extends Thread implements SerialPortEventListener {
 	static JLabel infuse_start = new JLabel("      Infusion Start Time:  00:00:00");
 	static JPanel pump_status_panel = new JPanel();
 	static JLabel pump_status_label = new JLabel();
-	static JLabel pump_program_version_label = new JLabel("program version 1.1.6");
+	static JLabel pump_program_version_label = new JLabel("program version 1.1.7");
 	static JPanel left_panel = new JPanel();
 	static JPanel subject_info = new JPanel();
 	static JLabel subject_title = new JLabel("Subject Info");
